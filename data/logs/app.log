@@ -1,0 +1,4 @@
+[2025-08-01T12:00:00Z] ERROR Payment failed for order 12345
+[2025-08-01T12:00:10Z] WARN Retry scheduled in 30s
+[2025-08-01T12:00:11Z] EXCEPTION NullReference at /payments/charge
+[2025-08-01T12:00:30Z] INFO Background job started
