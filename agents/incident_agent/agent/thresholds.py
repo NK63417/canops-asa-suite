@@ -3,6 +3,7 @@ from __future__ import annotations
 import json, uuid, yaml
 from datetime import datetime, timezone
 from pathlib import Path
+from agents.incident_agent.store.health import snapshot as db_snapshot
 
 def load_thresholds(path: str = "config.yaml") -> dict[str, int]:
     if not Path(path).exists():
@@ -23,12 +24,16 @@ def decide_incident(counts: dict[str, int], thresholds: dict[str, int]) -> dict 
             breaches.append((sev, cnt))
     if not breaches:
         return None
+    
+    health = db_snapshot()  # attach DB health
+
     return {
-        "incident_id": str(uuid.uuid4()),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "breaches": [{"sev": s, "count": c} for s, c in breaches],
-        "status": "OPEN",
-    }
+    "incident_id": str(uuid.uuid4()),
+    "timestamp": datetime.now(timezone.utc).isoformat(),
+    "breaches": [{"sev": s, "count": c} for s, c in breaches],
+    "db_health": health,
+    "status": "OPEN",
+}
 
 def record_incident(payload: dict, path: str = "outputs/incidents.jsonl") -> None:
     out = Path(path)

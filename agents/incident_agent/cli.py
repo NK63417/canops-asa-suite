@@ -13,6 +13,8 @@ def main(argv=None) -> int:
     p.add_argument("--window", type=int, default=60, help="window seconds")
     p.add_argument("--config", default="config.yaml", help="thresholds yaml")
     p.add_argument("--out", default="outputs/incidents.jsonl", help="sink jsonl")
+    p.add_argument("--notify", action="store_true", help="send mock Slack alert")
+    p.add_argument("--channel", default="#incidents", help="mock Slack channel") 
     args = p.parse_args(argv)
 
     lines = list(read_lines(args.log))
@@ -30,6 +32,9 @@ def main(argv=None) -> int:
     incident = decide_incident(counts, thresholds)
     if incident:
         record_incident(incident, path=args.out)
+        if args.notify:
+            from agents.incident_agent.notifier.slack import notify
+            notify(incident, args.channel)
         print(f"\n🚨 Incident recorded: {incident['incident_id']} → {args.out}")
     else:
         print("\nNo threshold breaches detected.")
