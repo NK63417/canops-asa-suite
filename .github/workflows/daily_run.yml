@@ -1,0 +1,38 @@
+name: Daily Incident Run
+
+on:
+  schedule:
+    - cron: "0 13 * * *"   # 13 UTC = 9 AM ET
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas pytest tabulate pyyaml
+
+      - name: Run CanOps ASA Suite
+        run: |
+          python -m agents.incident_agent.cli data/logs/app.log \
+            --window 120 \
+            --config config.yaml \
+            --out ./outputs/incidents.jsonl
+
+      - name: Commit daily report
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add outputs/incidents.jsonl
+          git commit -m "Auto: daily incident run $(date -u +'%Y-%m-%d')" || echo "No changes"
+          git push
