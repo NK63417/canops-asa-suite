@@ -5,3 +5,7 @@ __pycache__/
 *.pyc
 outputs/*
 !outputs/.gitkeep
+!outputs/incidents.jsonl
+!outputs/incidents.md
+!outputs/incidents.csv
+!outputs/dashboard.html
