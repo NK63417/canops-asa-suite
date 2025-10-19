@@ -2,22 +2,29 @@ name: Daily Incident Run
 
 on:
   schedule:
-    - cron: "0 13 * * *"   # 13 UTC = 9 AM ET
+    - cron: "0 13 * * *"     # 13:00 UTC daily
   workflow_dispatch:
+
+permissions:
+  contents: write            # allow push from GITHUB_TOKEN
 
 jobs:
   run:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install deps
         run: |
           python -m pip install --upgrade pip
           pip install pandas pytest tabulate pyyaml
@@ -25,14 +32,12 @@ jobs:
       - name: Run CanOps ASA Suite
         run: |
           python -m agents.incident_agent.cli data/logs/app.log \
-            --window 120 \
-            --config config.yaml \
-            --out ./outputs/incidents.jsonl
+            --window 120 --config config.yaml --out ./outputs/incidents.jsonl
 
       - name: Commit daily report
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add outputs/incidents.jsonl
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add outputs/incidents.jsonl outputs/incidents.md || true
           git commit -m "Auto: daily incident run $(date -u +'%Y-%m-%d')" || echo "No changes"
           git push
