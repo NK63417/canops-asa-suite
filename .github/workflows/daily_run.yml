@@ -34,10 +34,25 @@ jobs:
           python -m agents.incident_agent.cli data/logs/app.log \
             --window 120 --config config.yaml --out ./outputs/incidents.jsonl
 
-      - name: Commit daily report
+      - name: Commit daily report snapshot
+        if: ${{ github.ref == 'refs/heads/main' }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add outputs/incidents.jsonl outputs/incidents.md || true
-          git commit -m "Auto: daily incident run $(date -u +'%Y-%m-%d')" || echo "No changes"
-          git push
+          set -e
+          # 1) Prepare dated snapshot dir
+          DATE=$(date -u +'%Y-%m-%dT%H%M%SZ')
+          mkdir -p reports/$DATE
+
+          # 2) Copy generated artifacts (ignore if missing)
+          cp -f outputs/incidents.jsonl reports/$DATE/ || true
+          cp -f outputs/incidents.md    reports/$DATE/ || true
+
+          # 3) Commit only if there are actual changes
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+          git add reports
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Auto: daily snapshot $DATE"
+            git push origin HEAD:main
+          fi
