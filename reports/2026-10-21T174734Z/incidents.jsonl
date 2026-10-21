@@ -1,0 +1,1 @@
+{"incident_id": "8aa1c614-48b0-450a-b80d-34e6c4f72b23", "timestamp": "2026-10-21T17:47:34.627930+00:00", "breaches": [{"sev": "SEV2", "count": 1}, {"sev": "SEV3", "count": 1}, {"sev": "SEV1", "count": 1}], "db_health": {"can_connect": "PASS", "orders_table_exists": "PASS", "orders_rowcount": "3"}, "status": "OPEN"}
